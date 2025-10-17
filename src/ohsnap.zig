@@ -199,7 +199,10 @@ pub const Snap = struct {
 
         const file_text =
             try mod_dir.readFileAlloc(arena_allocator, snapshot.location.file, 1024 * 1024);
-        var file_text_updated = try std.ArrayList(u8).initCapacity(arena_allocator, file_text.len);
+        // Init capacity large enough so it doesn't have to resize (there is
+        // currently an invalid free bug in the resize array_list). This single
+        // allocation might be faster anyway.
+        var file_text_updated = try std.ArrayList(u8).initCapacity(arena_allocator, file_text.len + (got.len * 2));
 
         const line_zero_based = snapshot.location.line - 1;
         const range = try snapRange(file_text, line_zero_based);
@@ -594,4 +597,87 @@ test "regex match" {
     ).expectEqual(regex_finder.match(
         \\<^ $\d\.\d{2}$>
     ));
+}
+
+test "Large test result" {
+    const oh = OhSnap{};
+
+    const actual =
+        \\ state: 0
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, 501 ]
+        \\ state: 1
+        \\ [ 100, 200, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, ? ]
+        \\ [ 100, 200, 300, 400, 500 ]
+        \\ [ 100, 200, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, 501 ]
+        \\ state: 2
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, 501 ]
+        \\ state: 3
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, ?, ?, ?, 500 ]
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ state: 4
+        \\ [ 100, 200, 300, 400, 501 ]
+        \\ [ ?, ?, ?, ?, ? ]
+        \\ [ 100, 200, 300, 400, 501 ]
+        \\ [ ?, ?, ?, ?, 500 ]
+        \\ [ 100, 200, 300, 400, 501 ]
+        \\ state: 5
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, ?, ?, ?, 500 ]
+    ;
+
+    try oh.snap(
+        @src(),
+        \\*const [778:0]u8
+        \\  " state: 0
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, 501 ]
+        \\ state: 1
+        \\ [ 100, 200, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, ? ]
+        \\ [ 100, 200, 300, 400, 500 ]
+        \\ [ 100, 200, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, 501 ]
+        \\ state: 2
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ 100, ?, 300, 400, 500 ]
+        \\ [ ?, ?, ?, ?, 501 ]
+        \\ state: 3
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, ?, ?, ?, 500 ]
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ state: 4
+        \\ [ 100, 200, 300, 400, 501 ]
+        \\ [ ?, ?, ?, ?, ? ]
+        \\ [ 100, 200, 300, 400, 501 ]
+        \\ [ ?, ?, ?, ?, 500 ]
+        \\ [ 100, 200, 300, 400, 501 ]
+        \\ state: 5
+        \\ [ 100, ?, 300, 400, 501 ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, 200, 300, ?, ? ]
+        \\ [ ?, ?, ?, ?, 500 ]"
+        ,
+    ).expectEqual(actual);
 }
