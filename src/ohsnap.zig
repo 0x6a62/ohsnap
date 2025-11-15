@@ -202,7 +202,7 @@ pub const Snap = struct {
         // Init capacity large enough so it doesn't have to resize (there is
         // currently an invalid free bug in the resize array_list). This single
         // allocation might be faster anyway.
-        var file_text_updated = try std.ArrayList(u8).initCapacity(arena_allocator, file_text.len + (got.len * 2));
+        var file_text_updated = try std.ArrayList(u8).initCapacity(arena_allocator, file_text.len + (got.len * 4));
 
         const line_zero_based = snapshot.location.line - 1;
         const range = try snapRange(file_text, line_zero_based);
