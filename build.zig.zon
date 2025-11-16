@@ -39,8 +39,8 @@
             .hash = "muad_diff-0.0.1-p0-XoRGIAwBmN7XLmC4Z6Sj7mqeiUaZvwoisN1hXF81b",
         },
         .pretty = .{
-            .url = "https://github.com/0x6a62/pretty/archive/refs/heads/remove-filter.tar.gz",
-            .hash = "pretty-0.10.4-jb-Tm65r49LAQDgYiT9V3rpVyspgR6thlgxyx2tpY8psenp",
+            .url = "https://github.com/0x6a62/pretty/archive/refs/heads/fix-filter-enumfromint-error.tar.gz",
+            .hash = "pretty-0.10.5-Tm65r7ZKAQD5joN_vvTVFdj8evz4Dv5DtDkbPbo-RBcm",
         },
     },
     .paths = .{
