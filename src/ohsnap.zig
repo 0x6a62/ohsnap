@@ -44,7 +44,7 @@ comptime {
 
 const OhSnap = @This();
 
-comptime pretty_options: pretty.Options = pretty.Options{
+pretty_options: pretty.Options = pretty.Options{
     .max_depth = 0,
     .struct_max_len = 0,
     .array_max_len = 0,
