@@ -199,7 +199,11 @@ pub const Snap = struct {
 
         const file_text =
             try mod_dir.readFileAlloc(arena_allocator, snapshot.location.file, 1024 * 1024);
-        var file_text_updated = try std.ArrayList(u8).initCapacity(arena_allocator, file_text.len);
+
+        // Init capacity large enough so it doesn't have to resize (there is
+        // currently an invalid free bug in the resize array_list). This single
+        // allocation might be faster anyway.
+        var file_text_updated = try std.ArrayList(u8).initCapacity(arena_allocator, file_text.len + (got.len * 4));
 
         const line_zero_based = snapshot.location.line - 1;
         const range = try snapRange(file_text, line_zero_based);
@@ -594,4 +598,25 @@ test "regex match" {
     ).expectEqual(regex_finder.match(
         \\<^ $\d\.\d{2}$>
     ));
+}
+
+test "jb" {
+    const oh = OhSnap{};
+
+    const actual =
+        \\ this is a test
+        \\ and another line
+        \\ and more lines
+        \\ this is to make it longer
+    ;
+
+    try oh.snap(
+        @src(),
+        \\*const [76:0]u8
+        \\  " this is a test
+        \\ and another line
+        \\ and more lines
+        \\ this is to make it longer"
+        ,
+    ).expectEqual(actual);
 }
